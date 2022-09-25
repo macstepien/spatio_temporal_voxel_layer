@@ -144,16 +144,17 @@ void MeasurementBuffer::BufferROSCloud(const sensor_msgs::PointCloud2& cloud)
                  _global_frame, cloud.header.frame_id, cloud.header.stamp);
     tf2::doTransform (cloud, *cld_global, tf_stamped);
 
-    pcl::PCLPointCloud2::Ptr cloud_pcl (new pcl::PCLPointCloud2 ());
-    pcl::PCLPointCloud2::Ptr cloud_filtered (new pcl::PCLPointCloud2 ());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGB>());
 
-    pcl_conversions::toPCL(*cld_global, *cloud_pcl);
+    pcl::fromROSMsg(*cld_global, *cloud_pcl);
 
     // remove points that are below or above our height restrictions, and
     // in the same time, remove NaNs and if user wants to use it, combine with a
     if ( _voxel_filter )
     {
-      pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
+      pcl::VoxelGrid<pcl::PointXYZRGB> sor;
+
       sor.setInputCloud (cloud_pcl);
       sor.setFilterFieldName("z");
       sor.setFilterLimits(_min_obstacle_height,_max_obstacle_height);
@@ -166,7 +167,8 @@ void MeasurementBuffer::BufferROSCloud(const sensor_msgs::PointCloud2& cloud)
     }
     else
     {
-      pcl::PassThrough<pcl::PCLPointCloud2> pass_through_filter;
+      pcl::PassThrough<pcl::PointXYZRGB> pass_through_filter;
+
       pass_through_filter.setInputCloud(cloud_pcl);
       pass_through_filter.setKeepOrganized(false);
       pass_through_filter.setFilterFieldName("z");
@@ -175,7 +177,7 @@ void MeasurementBuffer::BufferROSCloud(const sensor_msgs::PointCloud2& cloud)
       pass_through_filter.filter(*cloud_filtered);
     }
 
-    pcl_conversions::fromPCL(*cloud_filtered, *cld_global);
+    pcl::toROSMsg(*cloud_filtered, *cld_global);
     _observation_list.front()._cloud = cld_global;
   }
   catch (tf::TransformException& ex)
