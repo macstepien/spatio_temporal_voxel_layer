@@ -123,6 +123,8 @@ target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-O3")
+
 # For testing on standalone, don't want to ship with production builds
 #add_executable(minimal_test
 #            test/minimal_test.cpp
